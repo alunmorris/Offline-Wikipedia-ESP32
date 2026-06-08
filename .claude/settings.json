@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(fuser *)",
+      "Bash(pio run *)",
+      "Bash(pio device monitor)",
+      "Bash(~/.platformio/penv/bin/pio run *)",
+      "Bash(/home/alun/.platformio/penv/bin/pio run *)"
+    ]
+  }
+}
