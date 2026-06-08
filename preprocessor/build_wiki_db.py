@@ -287,7 +287,8 @@ def _is_article_entry(entry) -> bool:
 
 
 def extract_images(zim_path: str, archive, output_dir: str,
-                   verbose: bool) -> dict[str, tuple[int, int, int]]:
+                   verbose: bool, jpeg_quality: int = 90,
+                   thumb_size: tuple[int, int] = (320, 212)) -> dict[str, tuple[int, int, int]]:
     """
     Extract and resize images from the ZIM file.
     Writes img_NNNN.dat chunk files, img_index.bin, and img_meta.txt.
@@ -303,7 +304,7 @@ def extract_images(zim_path: str, archive, output_dir: str,
         return {}
 
     IMG_CHUNK_SIZE  = 4 * 1024 * 1024   # 4 MB per chunk file
-    MAX_W, MAX_H    = 320, 212           # fits 320×240 screen minus NAV_H=28
+    MAX_W, MAX_H    = thumb_size
     MIN_DIM         = 50                 # skip tiny icons (not applied to SVG math)
     INCLUDE_MIME    = {"image/jpeg", "image/png", "image/webp"}
     # SVG equations use a prefix match (MIME may carry charset/profile params)
@@ -404,7 +405,7 @@ def extract_images(zim_path: str, archive, output_dir: str,
             else:
                 rgb = img.convert("RGB")
             buf = _io.BytesIO()
-            rgb.save(buf, format="JPEG", quality=90)
+            rgb.save(buf, format="JPEG", quality=jpeg_quality)
             img_bytes = buf.getvalue()
 
         # Roll to a new chunk file if needed
@@ -829,6 +830,10 @@ def main():
                         help=f"Sample every Nth index record into sparse_index.bin (default {SPARSE_STEP}). "
                              f"Increase for very large ZIM files to keep the sparse index within ESP32 RAM.")
     parser.add_argument("--verbose", action="store_true", help="Extra progress output")
+    parser.add_argument("--jpeg-quality", type=int, default=90, metavar="Q",
+                        help="JPEG quality for photo thumbnails, 1–95 (default: 90)")
+    parser.add_argument("--thumb-size", default="320x212", metavar="WxH",
+                        help="Max thumbnail dimensions in pixels (default: 320x212)")
     parser.add_argument("--no-images", action="store_true",
                         help="Skip image extraction pass (use for _pictures:no ZIM files)")
     parser.add_argument("--images-only", action="store_true",
@@ -836,6 +841,13 @@ def main():
     parser.add_argument("--word-index-only", action="store_true",
                         help="Build word_index.bin and title_index.bin from existing index.bin (no ZIM needed)")
     args = parser.parse_args()
+
+    try:
+        tw, th = (int(x) for x in args.thumb_size.lower().split("x"))
+        thumb_size = (tw, th)
+    except Exception:
+        print(f"Error: --thumb-size must be WxH (e.g. 240x159), got: {args.thumb_size}")
+        sys.exit(1)
 
     if args.word_index_only:
         build_word_index(args.output_dir)
@@ -852,7 +864,8 @@ def main():
 
     if args.images_only:
         if not args.no_images:
-            extract_images(args.zim_file, archive, args.output_dir, args.verbose)
+            extract_images(args.zim_file, archive, args.output_dir, args.verbose,
+                           args.jpeg_quality, thumb_size)
         print("Done (images only).")
         return
 
@@ -860,7 +873,8 @@ def main():
 
     img_info: dict[str, tuple[int, int, int]] = {}
     if not args.no_images:
-        img_info = extract_images(args.zim_file, archive, args.output_dir, args.verbose)
+        img_info = extract_images(args.zim_file, archive, args.output_dir, args.verbose,
+                                  args.jpeg_quality, thumb_size)
 
     written = build_database(args.zim_file, archive, title_map,
                              args.output_dir, args.limit, args.verbose,

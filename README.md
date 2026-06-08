@@ -22,13 +22,14 @@ A microSD card of **at least 8 GB** is required (Simple English Wikipedia uses ~
 
 ## Choosing a ZIM File
 
-The database is built from a [Kiwix](https://www.kiwix.org/) ZIM file. Download one from the [Kiwix library](https://library.kiwix.org/).
+The database is built from a [Kiwix](https://www.kiwix.org/) ZIM file. Download one from ([Wikimedia dumps](https://dumps.wikimedia.org/kiwix/zim/wikipedia/)).
 
 **Recommended: Simple English Wikipedia — `wikipedia_en_simple_all_maxi_YYYY-MM.zim`**
 
 - ~3.3 GB download, ~285 000 articles
 - Shorter articles and simpler language — well-suited to a small screen
 - Includes images (`_maxi` variant)
+- processed size is ~10GB
 
 Other ZIM files will work but larger editions (eg full English, ~90 GB) may exceed the SD card size the CYD is known to handle (32GB OK, 64GB may work).
 > Choose the `_maxi` variant (includes images). The `_mini` variant omits images and has only the top 50-100k articles.
@@ -50,6 +51,12 @@ The ESP32 cannot read a ZIM file directly. Several hard constraints make a purpo
 - **Images must be in formats the ESP32 can decode.** The firmware decodes JPEG via the hardware-accelerated TJpgDec library and QOI via a lightweight software decoder. ZIM stores images as WebP internally (with the original format preserved in the file path), which the ESP32 cannot guarantee to decode in available RAM. The preprocessor converts everything to JPEG (photos) or QOI (diagrams/SVGs).
 
 - **ZIM HTML needs cleaning.** Wikipedia ZIM files inject boilerplate footers, navigation chrome, and complex class structures into every article. The preprocessor strips these with BeautifulSoup so the firmware's minimal HTML renderer only has to handle the subset of tags that actually appear in article bodies.
+
+The processed folder is bigger than the ZIM because:
+
+- ZIM uses WebP images, which is extremely efficient. The preprocessor decodes WebP then re-encodes as JPEG (photos) or QOI (diagrams). QOI is lossless — it faithfully preserves every pixel, which is great for quality but much larger than WebP. JPEG at quality 90 is also larger than WebP at equivalent visual quality. WebP is simply a better codec.
+
+- ZIM uses cross-article zstd compression. Articles are packed into large clusters (1–4 MB) and compressed together — repeated phrases and boilerplate across articles compress away. The preprocessor re-compresses each article individually with LZ4, which loses that cross-article redundancy. LZ4 is chosen for decompression speed on the ESP32, not compression ratio.
 
 ### Requirements
 
