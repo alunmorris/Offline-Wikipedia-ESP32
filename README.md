@@ -3,8 +3,8 @@
 An offline Wikipedia reader for the ESP32-2432S028 ("Cheap Yellow Display") — a 320×240 ILI9341 touchscreen module. Articles, images, and a full search index are stored on a microSD card and read on-device with no internet connection.
 <img width="2048" height="1528" alt="image" src="https://github.com/user-attachments/assets/0412ca0f-a21c-41e1-a242-1b9dbddb307e" />
 
-Written by Alun Morris and Claude Code.
 <img width="2048" height="1497" alt="image" src="https://github.com/user-attachments/assets/b713e92a-6ba9-4e7e-b10c-57586139830f" />
+Written by Alun Morris and Claude Code.
 
 ---
 
