@@ -81,7 +81,7 @@ python3 build_wiki_db.py <input.zim> <output_dir>
 Example:
 
 ```bash
-python3 build_wiki_db.py wikipedia_en_simple_all_maxi_2026-05.zim output_v2
+python3 build_wiki_db.py --thumb-size 240x159 wikipedia_en_simple_all_maxi_2026-05.zim output_en_simple_all_maxi
 ```
 
 This runs two passes:
@@ -196,4 +196,5 @@ preprocessor/    PC-side database builder
   build_wiki_db.py   Main build script (ZIM → binary DB)
   debug_server.py    Local HTTP server for browser-based preview
   convert_to_v2.py   One-off migration from v1 format
+  output_en_knots_maxi/ small example wiki
 ```
