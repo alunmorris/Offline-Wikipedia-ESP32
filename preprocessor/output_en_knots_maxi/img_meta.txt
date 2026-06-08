@@ -1,0 +1,3 @@
+image_count=3107
+chunk_count=6
+chunk_size=4194304

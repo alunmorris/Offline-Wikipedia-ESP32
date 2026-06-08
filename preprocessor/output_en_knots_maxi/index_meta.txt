@@ -1,0 +1,7 @@
+article_count=586
+record_size=80
+chunk_size=33554432
+chunk_count=1
+sparse_step=64
+sparse_key_len=12
+db_name=English: Knots Maxi January 2026
