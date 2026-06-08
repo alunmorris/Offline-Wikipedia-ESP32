@@ -129,7 +129,7 @@ All files go into `<output_dir>/` and must be copied to a `wiki/` folder on the 
 
 ## SD Card Setup
 
-1. Format the card as FAT32.
+1. Format the card as FAT32. A 64KB allocation unit is best.
 2. Create a `wiki/` folder at the root.
 3. Copy all files from `<output_dir>/` into `/wiki/`.
 
