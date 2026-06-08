@@ -34,6 +34,8 @@ The database is built from a [Kiwix](https://www.kiwix.org/) ZIM file. Download 
 Other ZIM files will work but larger editions (eg full English, ~90 GB) may exceed the SD card size the CYD is known to handle (32GB OK, 64GB may work).
 > Choose the `_maxi` variant (includes images). The `_mini` variant omits images and has only the top 50-100k articles.
 
+**There is a small demo Wiki about knots in the preprocessor folder**
+
 ---
 
 ## Preprocessor
@@ -196,5 +198,5 @@ preprocessor/    PC-side database builder
   build_wiki_db.py   Main build script (ZIM → binary DB)
   debug_server.py    Local HTTP server for browser-based preview
   convert_to_v2.py   One-off migration from v1 format
-  output_en_knots_maxi/ small example wiki
+  output_en_knots_maxi/ small example wiki. Has smaller images to reduce size
 ```
