@@ -97,9 +97,9 @@ Build time is roughly 30–60 minutes on a modern PC (uses up to 4 CPU cores by 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--limit N` | 0 (all) | Process only the first N articles (useful for testing) |
-| `--workers N` | auto | Number of parallel compression workers |
+| `--workers N` | auto | Number of parallel compression workers (threads) |
 | `--thumb-size WxH` | 320x212 | Max thumbnail dimensions in pixels |
-| `--jpeg-quality Q` | 90 | JPEG quality for photo thumbnails, 1–95 |
+| `--jpeg-quality Q` | 90 | JPEG quality for photo thumbnails, 1–95. Does not affect size much. |
 | `--no-images` | off | Skip image processing |
 | `--images-only` | off | Rebuild image database only (articles already built) |
 | `--word-index-only` | off | Rebuild word/title index only |
