@@ -204,7 +204,7 @@ void wikiDbPreInit() {
 
 bool wikiDbInit() {
     SPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-    if (!SD.begin(SD_CS, SPI, 48000000)) {  // 48 MHz
+    if (!SD.begin(SD_CS, SPI, SD_SPI_HZ)) {
         Serial.println("[wiki_db] SD.begin() failed");
         return false;
     }
@@ -373,37 +373,6 @@ const String &wikiDbName() {
 // ---------------------------------------------------------------------------
 // Binary search index.bin for an exact title_key
 // ---------------------------------------------------------------------------
-uint32_t wikiDbFindByTitle(const String &title_key) {
-    if (!g_initialised) return UINT32_MAX;
-
-    String key = normaliseKey(title_key);
-
-    int32_t lo = 0;
-    int32_t hi = (int32_t)g_article_count - 1;
-
-    while (lo <= hi) {
-        int32_t mid = lo + (hi - lo) / 2;
-
-        g_index_file.seek((uint32_t)mid * INDEX_RECORD_SIZE);
-
-        char title_buf[TITLE_KEY_LEN + 1];
-        g_index_file.read((uint8_t *)title_buf, TITLE_KEY_LEN);
-        title_buf[TITLE_KEY_LEN] = '\0';
-        String rec_key = String(title_buf);
-
-        int cmp = key.compareTo(rec_key);
-        if (cmp == 0) {
-            // Found — read article_id (next 4 bytes)
-            return readU32LE(g_index_file);
-        } else if (cmp < 0) {
-            hi = mid - 1;
-        } else {
-            lo = mid + 1;
-        }
-    }
-    return UINT32_MAX;
-}
-
 // ---------------------------------------------------------------------------
 // Load one page-block of an article.  Supports two on-disk formats:
 //

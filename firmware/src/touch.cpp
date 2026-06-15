@@ -3,16 +3,42 @@
 #include "display.h"
 #include <Preferences.h>
 
-// XPT2046 on its own dedicated GPIO lines — bit-banged SPI.
-// The CYD (ESP32-2432S028R) physically wires XPT2046 to pins 25/39/32/33/36,
-// which are DIFFERENT from the ILI9341 HSPI pins (13/12/14/15) and the SD VSPI
-// pins (18/19/23/5). ESP32 only has two user SPI peripherals, so bit-bang is the
-// only clean solution that doesn't corrupt the TFT or SD buses.
+// Two transport modes:
+//
+// 1. Bit-banged SPI (default, CYD). The CYD (ESP32-2432S028R) physically wires
+//    XPT2046 to pins 25/39/32/33/36, which are DIFFERENT from the ILI9341 HSPI
+//    pins (13/12/14/15) and the SD VSPI pins (18/19/23/5). ESP32 only has two
+//    user SPI peripherals, so bit-bang is the only clean solution that doesn't
+//    corrupt the TFT or SD buses.
+//
+// 2. Shared hardware SPI (-DTOUCH_USE_SHARED_SPI=1, e.g. ESP32-C3). The C3 has
+//    a single SPI peripheral, so TFT, SD and touch all share SCK/MOSI/MISO with
+//    separate CS lines. XPT2046 reads use SPI transactions at 2 MHz, so they
+//    interleave safely with TFT_eSPI and SD traffic. Only TOUCH_CS_PIN and
+//    TOUCH_IRQ_PIN apply in this mode.
+#ifndef TOUCH_SCLK
 #define TOUCH_SCLK    25
+#endif
+#ifndef TOUCH_MISO
 #define TOUCH_MISO    39   // input-only ADC pin — no pullup needed (XPT2046 drives it)
+#endif
+#ifndef TOUCH_MOSI
 #define TOUCH_MOSI    32
+#endif
+#ifndef TOUCH_CS_PIN
 #define TOUCH_CS_PIN  33
+#endif
+#ifndef TOUCH_IRQ_PIN
 #define TOUCH_IRQ_PIN 36   // input-only ADC pin — XPT2046 drives PENIRQ active-LOW
+#endif
+
+// Normalise the build flag to a 0/1 internal flag used throughout this file.
+#if defined(TOUCH_USE_SHARED_SPI) && TOUCH_USE_SHARED_SPI
+#define TOUCH_SHARED_SPI 1
+#include <SPI.h>
+#else
+#define TOUCH_SHARED_SPI 0
+#endif
 
 // XPT2046 channel commands: start=1, 12-bit, differential, power-down.
 // On CYD (ESP32-2432S028R) landscape the electrode wiring is transposed:
@@ -48,6 +74,24 @@ static void saveCal() {
     p.end();
 }
 
+#if TOUCH_SHARED_SPI
+
+// ---- Shared hardware SPI for XPT2046 ------------------------------------------
+// XPT2046 max SPI clock is ~2.5 MHz. Transactions let it coexist with the TFT
+// and SD on the same bus (each device asserts only its own CS).
+
+static uint16_t tp_read_channel(uint8_t cmd) {
+    SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+    digitalWrite(TOUCH_CS_PIN, LOW);
+    SPI.transfer(cmd);
+    uint16_t val = SPI.transfer16(0);
+    digitalWrite(TOUCH_CS_PIN, HIGH);
+    SPI.endTransaction();
+    return (val >> 3) & 0x0FFF;
+}
+
+#else
+
 // ---- Bit-bang SPI for XPT2046 ------------------------------------------------
 // SPI Mode 0: CPOL=0 CPHA=0 — data driven on falling edge, sampled on rising edge.
 
@@ -72,6 +116,8 @@ static uint16_t tp_read_channel(uint8_t cmd) {
     digitalWrite(TOUCH_CS_PIN, HIGH);
     return (val >> 3) & 0x0FFF;
 }
+
+#endif  // TOUCH_SHARED_SPI
 
 static bool tp_touched() {
     return digitalRead(TOUCH_IRQ_PIN) == LOW;
@@ -159,6 +205,14 @@ static void runCalibration() {
 void touchInit() {
     loadCal();
 
+#if TOUCH_SHARED_SPI
+    // Bus pins already initialised by SPI.begin() in wikiDbInit().
+    pinMode(TOUCH_CS_PIN,  OUTPUT); digitalWrite(TOUCH_CS_PIN,  HIGH);
+    pinMode(TOUCH_IRQ_PIN, INPUT_PULLUP);
+
+    delay(10);
+    Serial.println("[touch] shared-SPI init done");
+#else
     pinMode(TOUCH_SCLK,    OUTPUT); digitalWrite(TOUCH_SCLK,    LOW);
     pinMode(TOUCH_MOSI,    OUTPUT); digitalWrite(TOUCH_MOSI,    LOW);
     pinMode(TOUCH_MISO,    INPUT);
@@ -167,6 +221,7 @@ void touchInit() {
 
     delay(10);
     Serial.println("[touch] bit-bang init done");
+#endif
 
     Preferences p;
     p.begin("wikiTch2", true);

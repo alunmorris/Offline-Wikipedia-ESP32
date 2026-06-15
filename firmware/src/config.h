@@ -3,19 +3,32 @@
 
 // CYD (ESP32-2432S028) SD card uses VSPI bus — separate from the TFT HSPI bus.
 // Standard CYD SD wiring: MOSI=23, MISO=19, SCK=18, CS=5
+// All pins overridable via build flags (see platformio.ini [env:c3]).
+#ifndef SD_CS
 #define SD_CS   5
+#endif
+#ifndef SD_MOSI
 #define SD_MOSI 23
+#endif
+#ifndef SD_MISO
 #define SD_MISO 19
+#endif
+#ifndef SD_SCK
 #define SD_SCK  18
+#endif
+
+// SD SPI clock. 48 MHz works on the CYD's dedicated VSPI bus; boards sharing
+// one bus between TFT/SD/touch (e.g. ESP32-C3) should use 25 MHz or lower.
+#ifndef SD_SPI_HZ
+#define SD_SPI_HZ 48000000
+#endif
 
 // CYD TFT backlight (PWM or digital)
+#ifndef TFT_BACKLIGHT_PIN
 #define TFT_BACKLIGHT_PIN 21
+#endif
 
-// XPT2046 touch pins are defined in touch.cpp (separate HSPI bus)
-
-// WiFi AP settings
-#define WIFI_SSID "Wikipedia"
-#define WIFI_PASS ""   // open network
+// XPT2046 touch pins and transport (bit-bang or shared SPI) are in touch.cpp.
 
 // SD paths
 #define INDEX_PATH          "/wiki/index.bin"

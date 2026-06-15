@@ -57,13 +57,6 @@ uint32_t wikiDbArticleCount();
 const String &wikiDbName();
 
 /*
- * Binary-search index.bin for an exact title_key match.
- * title_key must already be normalised (lowercase, trimmed).
- * Returns article_id, or UINT32_MAX if not found.
- */
-uint32_t wikiDbFindByTitle(const String &title_key);
-
-/*
  * Load the HTML for one block (page) of an article.
  *
  * For WKI2 format (new): decompresses exactly one 60 KB block; ar.pre_paged = true.
