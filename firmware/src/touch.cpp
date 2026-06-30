@@ -137,9 +137,9 @@ static void tp_get_raw(int16_t &rx, int16_t &ry) {
 // ---- Calibration -------------------------------------------------------------
 
 static void drawCrosshair(int x, int y) {
-    tft.drawLine(x - 12, y,      x + 12, y,      TFT_WHITE);
-    tft.drawLine(x,      y - 12, x,      y + 12, TFT_WHITE);
-    tft.drawCircle(x, y, 5, TFT_WHITE);
+    tft.drawLine(x - 12, y,      x + 12, y,      TFT_RED);
+    tft.drawLine(x,      y - 12, x,      y + 12, TFT_RED);
+    tft.drawCircle(x, y, 5, TFT_RED);
 }
 
 static void runCalibration() {
@@ -210,8 +210,12 @@ void touchInit() {
     pinMode(TOUCH_CS_PIN,  OUTPUT); digitalWrite(TOUCH_CS_PIN,  HIGH);
     pinMode(TOUCH_IRQ_PIN, INPUT_PULLUP);
 
+    // XPT2046 PENIRQ is only enabled after the first conversion with PD=00.
+    // Send a dummy read to put it into power-down mode so PENIRQ works.
     delay(10);
-    Serial.println("[touch] shared-SPI init done");
+    tp_read_channel(XPT_CMD_X);
+    delay(1);
+    Serial.printf("[touch] shared-SPI init done, IRQ after wake=%d\n", digitalRead(TOUCH_IRQ_PIN));
 #else
     pinMode(TOUCH_SCLK,    OUTPUT); digitalWrite(TOUCH_SCLK,    LOW);
     pinMode(TOUCH_MOSI,    OUTPUT); digitalWrite(TOUCH_MOSI,    LOW);

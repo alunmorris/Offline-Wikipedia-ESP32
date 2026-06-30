@@ -29,8 +29,8 @@ static uint32_t                  g_cursor_ms  = 0;
 // Results list geometry (keyboard visible vs. hidden)
 #define SEARCH_RESULTS_Y_KB  (SEARCH_INPUT_Y + SEARCH_INPUT_H)   // below input when KB shown
 #define SEARCH_RESULTS_H_KB  (KB_TOP_Y - SEARCH_RESULTS_Y_KB)    // space above keyboard
-#define SEARCH_RESULTS_Y     NAV_H           // results fill below nav when KB hidden
-#define SEARCH_RESULTS_H     (SCREEN_H - NAV_H)
+#define SEARCH_RESULTS_Y     (SEARCH_INPUT_Y + SEARCH_INPUT_H)  // always below input bar
+#define SEARCH_RESULTS_H     (SCREEN_H - SEARCH_RESULTS_Y)
 
 #define SEARCH_RESULT_H      18   // font2=16px + 1px pad; 212/18=11 results
 
@@ -476,6 +476,7 @@ static void goToArticle(uint32_t article_id, bool push_back) {
 
 static void showSearchScreen() {
     g_state = STATE_SEARCH;
+    g_results_scroll = 0;
     tft.fillScreen(COL_BG);
     drawNavBar("Wikipedia", false, !g_results.empty());
     if (g_kb_visible) {
@@ -485,7 +486,7 @@ static void showSearchScreen() {
     } else if (g_results.empty()) {
         drawSearchInput();
     } else {
-        // Results active — no input bar, results fill the space below nav
+        drawSearchInput();
         drawResultsList(SEARCH_RESULTS_Y, SEARCH_RESULTS_H);
     }
 }
@@ -551,8 +552,8 @@ static void handleSearchTap(int16_t tx, int16_t ty) {
                     for (auto &sr : secondary) g_results.push_back(sr);
                 }
             }
-            // Results now expand to full height below nav bar (no input bar shown)
             drawNavBar("Wikipedia", false, !g_results.empty());
+            drawSearchInput();
             drawResultsList(SEARCH_RESULTS_Y, SEARCH_RESULTS_H);
         } else if (ch == '\x01' || ch == '\x02') {
             // SHIFT or NUM toggled — redraw keyboard to show new state
