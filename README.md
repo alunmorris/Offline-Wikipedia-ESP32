@@ -24,7 +24,7 @@ Use PlatformIO environment `cyd` (`pio run -e cyd -t upload`).
 
 ### Option 2 — ESP32-C3 + JC2432S024 display module
 
-The **JC2432S024** is a bare 2.4″ 320×240 ILI9341 display module with XPT2046 resistive touch and a microSD card slot. It has **no processor onboard** — wire it to an ESP32-C3 dev board (SuperMini or DevKitM-1).
+The **JC2432S024** is a bare 2.4″ 320×240 ILI9341 display module with XPT2046 resistive touch and an SD card slot. It has **no processor onboard** — wire it to an ESP32-C3 dev board (SuperMini or DevKitM-1).
 
 The ESP32-C3 has a single SPI peripheral, so display, SD card and touch controller all share one SPI bus with separate chip-select lines.
 
