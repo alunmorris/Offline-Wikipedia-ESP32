@@ -39,7 +39,7 @@ The ESP32-C3 has a single SPI peripheral, so display, SD card and touch controll
 | SD_CS | 10 | |
 | T_CS | 3 | |
 | T_IRQ | 8 | PENIRQ — idles HIGH, safe on boot strapping pin |
-| LED / BL (backlight) | 0 | |
+| LED / BL (backlight) | 0 | Or tie directly to 3V3 for always-on backlight |
 | VCC | 3V3 | |
 | GND | GND | |
 
