@@ -124,6 +124,31 @@ static bool tp_touched() {
 }
 
 // Average 4 samples for noise rejection.
+#if TOUCH_SHARED_SPI
+// Batched: one beginTransaction + two CS assertions for all 8 reads instead of
+// eight separate transactions. Keeps CS low across all four reads of the same
+// channel — the XPT2046 starts a new conversion on each new command byte with
+// CS held low, so this is legal and saves significant SPI overhead on the C3.
+static void tp_get_raw(int16_t &rx, int16_t &ry) {
+    long sx = 0, sy = 0;
+    SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+    digitalWrite(TOUCH_CS_PIN, LOW);
+    for (int i = 0; i < 4; i++) {
+        SPI.transfer(XPT_CMD_X);
+        sx += (SPI.transfer16(0) >> 3) & 0x0FFF;
+    }
+    digitalWrite(TOUCH_CS_PIN, HIGH);
+    digitalWrite(TOUCH_CS_PIN, LOW);
+    for (int i = 0; i < 4; i++) {
+        SPI.transfer(XPT_CMD_Y);
+        sy += (SPI.transfer16(0) >> 3) & 0x0FFF;
+    }
+    digitalWrite(TOUCH_CS_PIN, HIGH);
+    SPI.endTransaction();
+    rx = (int16_t)(sx / 4);
+    ry = (int16_t)(sy / 4);
+}
+#else
 static void tp_get_raw(int16_t &rx, int16_t &ry) {
     long sx = 0, sy = 0;
     for (int i = 0; i < 4; i++) {
@@ -133,6 +158,7 @@ static void tp_get_raw(int16_t &rx, int16_t &ry) {
     rx = (int16_t)(sx / 4);
     ry = (int16_t)(sy / 4);
 }
+#endif
 
 // ---- Calibration -------------------------------------------------------------
 
