@@ -10,6 +10,8 @@ Written by Alun Morris and Claude Code.
 
 ## Hardware
 
+### Option 1 — ESP32-2432S028 ("Cheap Yellow Display")
+
 | Component | Detail |
 |-----------|--------|
 | Board | ESP32-2432S028 (CYD) |
@@ -17,6 +19,35 @@ Written by Alun Morris and Claude Code.
 | Touch | XPT2046 resistive (shared HSPI) |
 | SD card | VSPI bus — CS=5, MOSI=23, MISO=19, SCK=18 |
 | Backlight | GPIO 21 |
+
+Use PlatformIO environment `cyd` (`pio run -e cyd -t upload`).
+
+### Option 2 — ESP32-C3 + JC2432S024 display module
+
+The **JC2432S024** is a bare 2.4″ 320×240 ILI9341 display module with XPT2046 resistive touch and a microSD card slot. It has **no processor onboard** — wire it to an ESP32-C3 dev board (SuperMini or DevKitM-1).
+
+The ESP32-C3 has a single SPI peripheral, so display, SD card and touch controller all share one SPI bus with separate chip-select lines.
+
+| Module pin | ESP32-C3 GPIO | Notes |
+|------------|---------------|-------|
+| SCK | 4 | Shared by TFT + Touch + SD |
+| MOSI / SDI / T_DIN / SD_MOSI | 6 | Shared |
+| MISO / SDO / T_DO / SD_MISO | 5 | Shared |
+| CS (TFT) | 7 | |
+| DC / RS | 1 | |
+| RST | 3V3 | Tie high — not driven by firmware |
+| SD_CS | 10 | |
+| T_CS | 3 | |
+| T_IRQ | 8 | PENIRQ — idles HIGH, safe on boot strapping pin |
+| LED / BL (backlight) | 0 | |
+| VCC | 3V3 | |
+| GND | GND | |
+
+> Avoid GPIO 2 and GPIO 9 for external loads — they are ESP32-C3 boot-strapping pins.
+
+Use PlatformIO environment `c3` (`pio run -e c3 -t upload`).
+
+**First boot:** touch calibration runs automatically. Tap the two red crosshairs when prompted. Calibration is saved to flash and skipped on subsequent boots.
 
 A microSD card of **at least 8 GB** is required (Simple English Wikipedia uses ~7 GB on card).
 
@@ -199,6 +230,5 @@ firmware/        PlatformIO ESP32 firmware
 preprocessor/    PC-side database builder
   build_wiki_db.py   Main build script (ZIM → binary DB)
   debug_server.py    Local HTTP server for browser-based preview
-  convert_to_v2.py   One-off migration from v1 format
   output_en_knots_maxi/ small example wiki. Has smaller images to reduce size
 ```
